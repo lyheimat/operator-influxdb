@@ -43,7 +43,7 @@ public class InfluxDBSinkParameters {
     @JsonProperty(required = false)
     private TimeType timePrecision;
 
-    @JsonPropertyDescription("时间戳精度，默认为纳秒")
+    @JsonPropertyDescription("是否启用批处理写入")
     @JsonProperty(required = false)
     private boolean enableBatch;
 
