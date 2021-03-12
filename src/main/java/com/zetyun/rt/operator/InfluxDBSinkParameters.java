@@ -25,7 +25,7 @@ public class InfluxDBSinkParameters {
 
     @JsonPropertyDescription("数据的保留策略，默认为autogen")
     @JsonProperty(required = false)
-    private String RP;
+    private String retentionPolicy;
 
     @JsonPropertyDescription("表名")
     @JsonProperty(required = true)
@@ -41,7 +41,19 @@ public class InfluxDBSinkParameters {
 
     @JsonPropertyDescription("时间戳精度，默认为纳秒")
     @JsonProperty(required = false)
-    private TimeType timeType;
+    private TimeType timePrecision;
+
+    @JsonPropertyDescription("时间戳精度，默认为纳秒")
+    @JsonProperty(required = false)
+    private boolean enableBatch;
+
+    @JsonPropertyDescription("批处理缓冲数据量")
+    @JsonProperty(required = false)
+    private int batchActions;
+
+    @JsonPropertyDescription("批处理缓冲时间")
+    @JsonProperty(required = false)
+    private int flushDuration;
 
     @Override
     public String toString() {
@@ -50,11 +62,14 @@ public class InfluxDBSinkParameters {
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", database='" + database + '\'' +
-                ", RP='" + RP + '\'' +
+                ", RP='" + retentionPolicy + '\'' +
                 ", measurement='" + measurement + '\'' +
                 ", tags=" + tags +
-                ", timestamp=" + timestamp +
-                ", timeType=" + timeType +
+                ", timestamp='" + timestamp + '\'' +
+                ", timePrecision=" + timePrecision +
+                ", enableBatch=" + enableBatch +
+                ", batchActions=" + batchActions +
+                ", flushDuration=" + flushDuration +
                 '}';
     }
 
@@ -90,12 +105,12 @@ public class InfluxDBSinkParameters {
         this.database = database;
     }
 
-    public String getRP() {
-        return RP;
+    public String getRetentionPolicy() {
+        return retentionPolicy;
     }
 
-    public void setRP(String RP) {
-        this.RP = RP;
+    public void setRetentionPolicy(String retentionPolicy) {
+        this.retentionPolicy = retentionPolicy;
     }
 
     public String getMeasurement() {
@@ -122,12 +137,36 @@ public class InfluxDBSinkParameters {
         this.timestamp = timestamp;
     }
 
-    public TimeType getTimeType() {
-        return timeType;
+    public TimeType getTimePrecision() {
+        return timePrecision;
     }
 
-    public void setTimeType(TimeType timeType) {
-        this.timeType = timeType;
+    public void setTimePrecision(TimeType timePrecision) {
+        this.timePrecision = timePrecision;
+    }
+
+    public boolean isEnableBatch() {
+        return enableBatch;
+    }
+
+    public void setEnableBatch(boolean enableBatch) {
+        this.enableBatch = enableBatch;
+    }
+
+    public int getBatchActions() {
+        return batchActions;
+    }
+
+    public void setBatchActions(int batchActions) {
+        this.batchActions = batchActions;
+    }
+
+    public int getFlushDuration() {
+        return flushDuration;
+    }
+
+    public void setFlushDuration(int flushDuration) {
+        this.flushDuration = flushDuration;
     }
 }
 

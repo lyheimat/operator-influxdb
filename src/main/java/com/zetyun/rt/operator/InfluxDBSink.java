@@ -7,9 +7,8 @@ import com.zetyun.rt.sdk.operator.OperatorContext;
 import org.influxdb.BatchOptions;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
-import org.influxdb.dto.BatchPoints;
 import org.influxdb.dto.Point;
-import org.influxdb.impl.TimeUtil;
+
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +35,9 @@ public class InfluxDBSink extends SinkAction {
     private List<String> tagList;
     private String timestamp;
     private TimeType timeType;
+    private boolean enableBatch;
+    private int batchActions;
+    private int flushDuration;
 
     @Override
     public void init(OperatorContext context) {
@@ -45,22 +47,37 @@ public class InfluxDBSink extends SinkAction {
         username = parameters.getUsername();
         password = parameters.getPassword();
         database = parameters.getDatabase();
-        String rp = parameters.getRP();
+        String rp = parameters.getRetentionPolicy();
         retentionPolicy = rp == null || rp.equals("") ? "autogen" : rp;
         measurement = parameters.getMeasurement();
         tagList = parameters.getTags();
         timestamp = parameters.getTimestamp();
-        TimeType type = parameters.getTimeType();
+        TimeType type = parameters.getTimePrecision();
         timeType = type == null ? TimeType.NANOSECONDS : type;
+        enableBatch = parameters.isEnableBatch();
 
+        //获取连接
         influxDB = InfluxDBFactory.connect(url, username, password);
         influxDB.setDatabase(database);
         influxDB.setRetentionPolicy(retentionPolicy);
-        influxDB.enableBatch(BatchOptions.DEFAULTS);
+
+        //是否启用批处理
+        if (enableBatch){
+            batchActions = parameters.getBatchActions();
+            flushDuration = parameters.getFlushDuration();
+            if (batchActions != 0 && flushDuration != 0){
+                //自定义批处理数据量及时间间隔
+                influxDB.enableBatch(batchActions, flushDuration, TimeUnit.MILLISECONDS);
+            } else {
+                //influxDB默认批处理设置
+                influxDB.enableBatch(BatchOptions.DEFAULTS);
+            }
+        }
     }
 
     public void apply(RtEvent value) throws Exception {
 
+        //判断数据是否含有事件时间
         long ts = 0;
         if (timestamp != null && !timestamp.equals("")){
             ts = Long.parseLong(value.getField(timestamp).toString());
@@ -70,6 +87,7 @@ public class InfluxDBSink extends SinkAction {
         Map<String, Object> fields = value.getFields();
         HashMap<String, String> tags = new HashMap<String, String>();
 
+        //准备tags数据和fields数据
         Iterator<Map.Entry<String, Object>> iterator = fields.entrySet().iterator();
         while (iterator.hasNext()){
             Map.Entry<String, Object> item = iterator.next();
@@ -113,7 +131,6 @@ public class InfluxDBSink extends SinkAction {
                 builder.time(System.currentTimeMillis() / 1000 / 3600, TimeUnit.HOURS);
                 break;
             case NANOSECONDS:
-            default:
         }
         builder.tag(tags);
         builder.fields(fields);
